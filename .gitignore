@@ -19,3 +19,6 @@ yarn-error.log*
 *.tgz
 tmp/
 tests/output/
+
+# Local release tarballs (built by hand; CI builds its own)
+dsh-ding-*.tgz
