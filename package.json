@@ -1,0 +1,67 @@
+{
+  "name": "dsh-ding",
+  "version": "0.6.0",
+  "description": "DSH 插件：一轮对话结束时播放水滴落水提示音（七种音色，含石头落水的咕咚声；可开关 / 音色 / 音量，设置项位于「通用设置」页）",
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": {
+      "default": "./lib/index.js"
+    },
+    "./client": {
+      "default": "./lib/client.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib",
+    "cordis.patch.yml",
+    "README.md",
+    "README.zh.md",
+    "LICENSE",
+    "docs/*.wav",
+    "docs/*.md"
+  ],
+  "scripts": {
+    "test": "node tests/client_selftest.mjs && node tests/audio_stall_selftest.mjs && node tests/sound_spectrum_selftest.mjs",
+    "test:sound": "node tests/sound_spectrum_selftest.mjs",
+    "test:audio": "node tests/audio_stall_selftest.mjs",
+    "test:host": "node tests/host_probe.mjs",
+    "test:browser": "node tests/browser_probe.mjs",
+    "test:live": "node tests/live_turn_probe.mjs",
+    "test:multi": "node tests/multi_turn_probe.mjs",
+    "test:background": "node tests/background_turn_probe.mjs",
+    "test:autoplay": "node tests/autoplay_probe.mjs",
+    "test:hmr": "node tests/hmr_probe.mjs"
+  },
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "notification",
+    "sound",
+    "audio",
+    "chime"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tinyhan9/dsh-ding.git"
+  },
+  "homepage": "https://github.com/tinyhan9/dsh-ding#readme",
+  "bugs": {
+    "url": "https://github.com/tinyhan9/dsh-ding/issues"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "inject": [],
+      "platform": "web"
+    }
+  }
+}

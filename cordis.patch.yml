@@ -1,0 +1,7 @@
+# dsh-ding bundle 层：把本包挂成 profile 的一个 Loader 行。
+# 行 id 与包名一致，客户端 bundle 里的 window.__ModuleLoader__.load({ id }) 也用同名，
+# 模块系统按包名与 Loader 行对齐。
+- insert:
+    - id: dsh-ding
+      name: 'dsh-ding'
+      config: {}
