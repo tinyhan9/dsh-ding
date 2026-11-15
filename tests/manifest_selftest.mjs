@@ -140,15 +140,15 @@ if (!patchSource.includes(manifest.name)) fail(`${dsh.bundle.patch} does not men
 ok(`${dsh.bundle.patch} inserts one Loader row for ${manifest.name}`);
 
 /* ---------- README 存在且有中英两份 ---------- */
-for (const readme of ["README.md", "README.zh.md", "LICENSE"]) {
+for (const readme of ["README.md", "README.en.md", "LICENSE"]) {
   const path = join(root, readme);
   if (!existsSync(path)) fail(`${readme} is missing`);
   if (statSync(path).size < 200) fail(`${readme} looks truncated (${statSync(path).size} bytes)`);
 }
-ok("README.md, README.zh.md and LICENSE are present");
+ok("README.md, README.en.md and LICENSE are present");
 
 /* ---------- 发布产物里不能有本机绝对路径 ---------- */
-const shipped = [hostEntry, clientEntry, dsh.bundle.patch, "README.md", "README.zh.md"];
+const shipped = [hostEntry, clientEntry, dsh.bundle.patch, "README.md", "README.en.md"];
 for (const file of shipped) {
   const text = readFileSync(join(root, file), "utf8");
   const hit = text.match(/[A-Za-z]:\\[^\s"')]+/u);

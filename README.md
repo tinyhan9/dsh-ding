@@ -1,227 +1,220 @@
 # dsh-ding
 
-**Turn-end chime for [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness).** When a conversation turn finishes, play a short sound — so you can look away while a long task runs and still know the moment it's done.
+DeepSeek Harness 插件：**一轮对话结束时播放提示音**。
 
-Sounds are synthesised in the browser: seven presets (water drop, stone plop, bell, chime, blip), adjustable volume, a global switch, and a live preview. No audio files, no network, no build step, no runtime dependencies.
+跑长任务时人不在屏幕前，回来只知道“好像跑完了”。这个插件在每轮结束时响一声，声音可选、音量可调、可以整个关掉。
 
-[中文说明](README.zh.md)
+声音全部由程序合成：七种音色（水滴落水、石头落水、水泡、铃、连音、短促音），可调音量、总开关、即时试听。不带音频文件、不联网、没有构建步骤、没有运行期依赖。
+
+> 设置项位置：**设置 → 通用设置 → 对话结束提示音**。
+> 装好后随便点一下窗口把音频解锁，之后每一轮跑完都会响。
+
+[English](README.en.md)
 
 ---
 
-## Features
+## 快速开始
 
-- **Rings when a turn ends** — a session going from *running* to *idle* plays one sound.
-  - Watches **every** session, so a turn that finishes while you are looking at another conversation still rings.
-  - Subagent sessions are excluded: they are short and numerous, and ringing for them is noise.
-  - Taking the baseline on entry means opening the page does not fire a spurious ring.
-  - The same idle state published twice only rings once.
-- **Seven presets**, default `droplet`:
+```bash
+# 装到本地 profile（把路径换成你这份 checkout 的位置）
+dsh plugin --profile desktop install link:<本目录绝对路径>
 
-  | id | sound | character |
+# 或者用插件管理界面，安装 spec 填：
+link:<本目录绝对路径>
+```
+
+装完重启一次桌面端，然后发一句话试试。要确认装上了，控制台敲：
+
+```js
+__DSH_DING__.version    // "0.6.0"
+__DSH_DING__.ring()     // 立刻响一声，验证音频链路
+```
+
+嫌吵就去设置里换音色或关掉；听不见就看 [诊断](#诊断) 那张表。
+
+## 功能
+
+- **轮次结束提示音**：任一会话从「运行中」掉到「空闲」时播一次。
+  - 盯**所有**会话 —— 你在别的会话里看着，原来那一轮跑完同样会响。
+  - 子代理会话不响：它们又短又多，响了就是噪音。
+  - 进页面时重新取基线 —— 不会一打开就响。
+  - 同一条空闲状态重复发布只响一次。
+- **七种音色**，默认 `droplet`：
+
+  | id | 音色 | 特征 |
   |---|---|---|
-  | `droplet` | 水滴落水 · 叮咚 | 900→1650 Hz, glide in 40 ms, then a small "dong" on the water surface |
-  | `waterdrop` | 水滴 · 清脆 | 620→1500 Hz, glide in 30 ms, clean 90 ms |
-  | `waterdrop2` | 水泡 · 圆润 | 300→700 Hz, slower glide, longer tail |
-  | `plop` | 石头落水 · 咕咚 | 280→115 Hz, **downward** glide, low body |
-  | `ding` | 叮 · 双音铃 | two-note bell |
-  | `chime` | 铃 · 三连音 | three-note chime |
-  | `blip` | 哒 · 短促 | single short blip |
+  | `droplet` | 水滴落水 · 叮咚 | 900→1650Hz，40ms 滑完，后面跟一记水面「咚」 |
+  | `waterdrop` | 水滴 · 清脆 | 620→1500Hz，30ms 滑完，90ms 收干净 |
+  | `waterdrop2` | 水泡 · 圆润 | 300→700Hz，滑得更慢、余韵更长 |
+  | `plop` | 石头落水 · 咕咚 | 280→115Hz **下行**滑音，低频沉底 |
+  | `ding` | 叮 · 双音铃 | 两声铃 |
+  | `chime` | 铃 · 三连音 | 三声铃 |
+  | `blip` | 哒 · 短促 | 单声短促 |
 
-- **Volume 0–100%**, default 60%.
-- **Global switch** — off means no audio path is touched at all.
-- **Settings live in Settings → General**: enable, sound, volume, preview.
+- **音量 0–100%**，默认 60%。
+- **总开关**，关掉后完全不碰音频。
+- **设置项在「设置 → 通用设置」**里：开关 / 音色 / 音量 / 试听。
 
-Each preset is a recipe of *tones* and *noise bursts*. Pitch follows an exponential glide;
-amplitude is `(1−e^(−t/attack))·e^(−t/tau)`. WebAudio plays exactly that curve via
-`setValueCurveAtTime`; without WebAudio the same recipe is rendered to a WAV data URI and
-played through an `<audio>` element, so both paths sound the same.
+每个音色是一组「音符 + 噪声段」配方。音高按指数滑音，包络是
+`(1−e^(−t/attack))·e^(−t/tau)`。WebAudio 用 `setValueCurveAtTime` 播这条曲线；
+没有 WebAudio 时把同一份配方算成 WAV data-URI 交给 `<audio>`，两条路听感一致。
 
-## Install
+## 安装
 
-Install from the local directory with the plugin manager:
-
-```
-link:<absolute path to this directory>
-```
-
-or on the command line (from the profile directory):
+用插件管理装本地目录：
 
 ```
-dsh plugin --profile desktop install link:<absolute path to this directory>
+link:<本目录绝对路径>
 ```
 
-The plugin manager records `dsh-ding` in the profile's `dependencies` and
-`dsh.profile.bundles`, and adds one Loader row to `cordis.patch.yml`.
-Restart the desktop app once, or refresh the web page.
+命令行等价做法（profile 目录下）：
 
-## Use
+```
+dsh plugin --profile desktop install link:<本目录绝对路径>
+```
 
-1. Open **Settings** (`Ctrl+Alt+,` or the account menu) → **General**.
-2. Find the *turn-end chime* row and set:
-   - enable / disable,
-   - sound preset,
-   - volume,
-   - **Preview** to hear it immediately.
-3. Send a message; the sound plays when that turn finishes.
+装完 `plugin_manager` 会把 `dsh-ding` 写进 profile 的 `dependencies` 与
+`dsh.profile.bundles`，并在 `cordis.patch.yml` 里加一行 Loader 行。
+桌面端重启一次，Web 端刷新页面。
 
-Preferences are stored in the browser's `localStorage` under `dsh-ding:settings`:
+## 使用
+
+1. 打开 设置（`Ctrl+Alt+,` 或 账号菜单）→ **通用设置**。
+2. 找到「对话结束提示音」一行：
+   - 勾选/取消 **启用**；
+   - 下拉选音色；
+   - 拖音量条；
+   - **试听** 立刻按当前设置响一次。
+3. 回到对话发一句话，这轮跑完就会响。
+
+偏好存在浏览器 `localStorage` 的 `dsh-ding:settings` 里（带 `v: 2` 版本号），形如：
 
 ```json
 { "v": 2, "enabled": true, "sound": "droplet", "volume": 0.6 }
 ```
 
-Malformed data (truncated JSON, out-of-range volume, unknown preset) silently falls back to
-defaults instead of blanking the settings page.
+坏数据（半截 JSON、越界音量、不存在的音色）一律静默回落到默认值，不会让设置页白屏。
 
-## Why preferences live in `localStorage`
+## 为什么偏好不放 Host settings
 
-Deliberately not in Host settings. That avoids depending on the `schemastery` schema, so a
-DSH upgrade or a profile switch cannot break the plugin through schema drift. The trade-off is
-that preferences are per browser rather than per profile — acceptable for a sound toggle.
+故意的。不依赖 `schemastery` schema，DSH 升级、换 profile 都不会因为 schema 漂移把这个插件搞挂。
+代价是偏好跟着浏览器走、不跟着 profile 走 —— 对一个开关音色的插件来说可以接受。
 
-## Diagnostics
+## 诊断
 
-The page exposes a read-only handle:
+页面控制台里有一个只读把手：
 
 ```js
 __DSH_DING__.version      // "0.6.0"
-__DSH_DING__.watching     // true when the turn-end watcher is installed
-__DSH_DING__.watched      // how many sessions are currently watched
-__DSH_DING__.rings        // how many times it has rung
-__DSH_DING__.lastSession  // the session whose turn end was rung
+__DSH_DING__.watching     // 轮次监听是否装上
+__DSH_DING__.watched      // 当前盯了几个会话
+__DSH_DING__.rings        // 累计响过多少次
+__DSH_DING__.lastSession  // 最近一次判定结束的会话
 __DSH_DING__.lastPath     // "webaudio" | "fallback"
-__DSH_DING__.trace        // last 40 detection → playback steps
-__DSH_DING__.problems     // degradation log
+__DSH_DING__.trace        // 最近 40 条「判定 → 出声」流水
+__DSH_DING__.problems     // 降级记录
 __DSH_DING__.audio()      // { unlocked, state, hasFallback }
-__DSH_DING__.settings()   // current preferences
-__DSH_DING__.ring()       // ring once, to verify the audio path
-__DSH_DING__.unlock()     // unlock audio without a click
-__DSH_DING__.render(id)   // render a preset to a WAV data URI
-__DSH_DING__.sounds()     // preset ids
+__DSH_DING__.settings()   // 当前偏好
+__DSH_DING__.ring()       // 手动响一次，验证音频链路
+__DSH_DING__.unlock()     // 不用点击也能解锁音频
+__DSH_DING__.render(id)   // 把某个音色渲染成 WAV data URI
+__DSH_DING__.sounds()     // 音色 id 列表
 ```
 
-If it stays silent:
+听不见声音时按这个顺序看：
 
-| symptom | meaning |
+| 看到的 | 含义 |
 |---|---|
-| `__DSH_DING__` is `undefined` | plugin not active (`inject` name changed, or not installed) |
-| `watched` is `0` | no session list yet — the watcher has nothing to attach to |
-| `rings` does not grow | no `running → idle` transition was observed; check `trace` for `turn-end` |
-| `rings` grows but no sound | audio blocked; check `trace` for `skip` / timings, and `problems` |
+| `__DSH_DING__` 是 `undefined` | 插件没激活（`inject` 名变了，或没装上） |
+| `watched` 是 `0` | 还没拿到会话列表，监听没有对象可挂 |
+| `rings` 不涨 | 没观测到 `running → idle`，看 `trace` 里有没有 `turn-end` |
+| `rings` 涨了但没声音 | 音频被拦，看 `trace` 里的 `skip` 和 `problems` |
 
-## How the turn-end detection works
+## 轮次判定怎么做的
 
-| item | behaviour |
+| 项 | 行为 |
 |---|---|
-| what is watched | every session in `ctx.sessions.list`; watchers are added/removed as the list changes |
-| what is skipped | sessions with `origin === "subagent"` |
-| data sources | each session's `SessionBinding.session` subscription **and** the `uiSession.sessionStatus` aggregate map — two independent paths |
-| baseline | each path keeps **its own** previous `running` value, so neither overwrites the other |
-| de-duplication | same session rings at most once per 700 ms; observing `running: true` again clears the mark |
-| `sessionStatus` reshaped | degrades to the binding path only, instead of disabling the watcher |
+| 盯谁 | `ctx.sessions.list` 里的**每一个**会话，随列表增删自动补/撤监听 |
+| 不盯谁 | `origin === "subagent"` 的子代理会话 |
+| 数据源 | 每个会话的 `SessionBinding.session` 订阅 **和** `uiSession.sessionStatus` 聚合表，两条独立路径 |
+| 基线 | 两条路径**各存一份**上一拍 `running`，互不覆盖 |
+| 去重 | 同一会话 700ms 内只响一次；观测到重新 `running: true` 立刻清空 |
+| `sessionStatus` 形状变了 | 只降级成 binding 单路，不会把整块监听停掉 |
 
-Two failure modes shaped this design, and both are pinned by tests:
+两个真实故障塑造了这个设计，都被测试钉住了：
 
-1. The aggregate map alone can skip a `true → false` transition under some orderings.
-2. Watching only the *current* session silently drops a turn that finishes while you are
-   looking at another conversation.
+1. 只看聚合表时，某些时序下会整段跳过一次 `true → false`；
+2. 只盯「当前会话」时，你切到别的会话看内容，原来那一轮跑完就没人看着。
 
-## Audio and autoplay policy
+## 音频与自动播放策略
 
-Browsers only allow `AudioContext.resume()` and a first `play()` inside a real user gesture, and
-a turn end is an async callback outside any gesture. So the plugin installs a one-shot
-`pointerdown` / `keydown` / `touchstart` listener and unlocks both paths inside the first real
-gesture, then removes the listener.
+浏览器只允许在真实用户手势里 `AudioContext.resume()` 与首次 `play()`，而轮次结束是异步回调、
+不在手势里。所以插件装一次性 `pointerdown` / `keydown` / `touchstart` 监听，在第一个真实手势里
+把两条通道都解锁，然后摘掉监听。
 
-Chrome can leave `AudioContext` suspended after device switches, long idle periods, or sleep
-resume, and `resume()` may then return a promise that **never settles**. `ring()` therefore
-never waits on it: it gives `resume()` at most `RESUME_TIMEOUT_MS = 120 ms` and falls back to
-`<audio>` immediately. Both channels are tried; a rejected playback is logged in `problems`
-rather than swallowed.
+Chrome 在设备切换、长时间闲置、系统休眠恢复之后会把 `AudioContext` 挂起，此时 `resume()`
+返回的 promise **可能永远不 resolve**。所以 `ring()` 不等它：最多给 `RESUME_TIMEOUT_MS = 120ms`，
+超时立刻走 `<audio>` 兜底。两条路都试；被拒的播放写进 `problems`，不静默吞掉。
 
-## When code changes take effect
+## 改完代码怎么生效
 
-| change | action |
+| 情况 | 需要做什么 |
 |---|---|
-| `lib/client.js` only | nothing — HMR pushes the new bundle within a second |
-| `package.json` `dsh.client` / `exports` | reload the page (`F5` / `Ctrl+R`) |
-| install / uninstall, `cordis.patch.yml` | restart the app |
+| 只改了 `lib/client.js` | 什么都不用做，HMR 一秒内推新 bundle |
+| 改了 `package.json` 的 `dsh.client` / `exports` | 页面按 `F5`（或 `Ctrl+R`） |
+| 新装 / 卸载插件、改 `cordis.patch.yml` | 重启应用 |
 
-The desktop production build has no *Reload* menu item (`reloadPageMenu` is registered only in
-the development branch), but Chromium's keyboard reload still works: `F5`, `Ctrl+R` and
-`Ctrl+F5` reload; `Ctrl+Shift+R` is blocked. Reloading only reloads the page document — the
-Host process keeps running, so sessions and in-flight tasks survive.
+桌面端生产构建**没有「刷新」菜单项**（`reloadPageMenu` 只在 development 分支注册），
+但 Chromium 自带的键盘刷新仍然有效：`F5` / `Ctrl+R` / `Ctrl+F5` 都会重载，
+`Ctrl+Shift+R` 被拦。刷新只重载页面文档，Host 进程不动，会话记录和正在跑的任务都还在。
 
-## Releasing
+## 文件
 
-Tag-driven, verified before it publishes (`.github/workflows/release.yml`):
+| 文件 | 作用 |
+|---|---|
+| [`lib/client.js`](lib/client.js) | 全部逻辑：轮次监听、设置行、`VOICES` 音色配方与合成 |
+| [`lib/index.js`](lib/index.js) | Node 半边，空 `apply`，只为给 Loader 一行可挂载的 Host 实体 |
+| [`cordis.patch.yml`](cordis.patch.yml) | bundle 层：把本包插成 profile 的一个 Loader 行 |
+| [`docs/`](docs/) | 每个音色的离线渲染 WAV，以及说明 |
 
-1. Bump `version` in `package.json` and the `version` string on the diagnostics face in
-   `lib/client.js` — `tests/manifest_selftest.mjs` fails if the two disagree.
-2. Write the release body to `docs/release-notes.md`. Use `<!--ASSETS-->` where the asset list
-   goes; the script substitutes the real filename, byte size and SHA-256 into both language
-   sections, so no digest is ever hand-copied.
-3. `git tag -a v<version> -m "..."` and push the tag.
-4. CI runs `manifest`, `client`, `audio_stall` and `sound_spectrum`, packs the tarball, then
-   publishes. The release is created as a **draft** and only flipped to public after the asset
-   upload succeeds, so a failed run never leaves a half-published version.
+## 自测
 
-To publish by hand:
+九层，从便宜到贵，全部在仓库内可跑：
 
 ```bash
-npm pack --pack-destination .
-GITHUB_TOKEN=... node scripts/publish-release.mjs \
-  --tag v0.6.0 --notes docs/release-notes.md --assets dsh-ding-0.6.0.tgz
-```
-
-## Layout
-
-| file | role |
-|---|---|
-| [`lib/client.js`](lib/client.js) | everything: the turn-end watcher, the settings row, the `VOICES` recipes and synthesis |
-| [`lib/index.js`](lib/index.js) | Node half — an empty `apply`, so the Loader has a mountable Host row |
-| [`cordis.patch.yml`](cordis.patch.yml) | bundle layer: inserts this package as one Loader row |
-| [`docs/`](docs/) | offline-rendered WAV of every preset, plus notes |
-
-## Tests
-
-Nine layers, cheapest first, all runnable from this repository:
-
-```bash
-# 0. package shape: manifest fields, exports, bundle wrapper, version, patch — no browser
+# ⓿ 包结构：清单字段、exports、bundle 包装格式、版本号、patch —— 不需要浏览器
 node tests/manifest_selftest.mjs
 
-# 1. the bundle itself: loader wrapper, slot registration, turn-end detection,
-#    fallback path, unlock path, disposal — pure Node, no browser
+# ① bundle 本身：加载器包装、槽位注册、轮次判定、兜底路径、解锁路径、卸载 —— 纯 Node
 node tests/client_selftest.mjs
 
-# 2. a hanging resume() must not silence the ring
+# ② resume 悬空不再静音
 node tests/audio_stall_selftest.mjs
 
-# 3. acoustic check of every preset (renders to WAV and analyses it)
+# ③ 音色声学验收：每个音色渲染成 WAV 做频谱分析
 node tests/sound_spectrum_selftest.mjs docs
 
-# 4. the running Host: the boot graph has dsh-ding and serves the bundle
+# ④ 运行中的 Host：boot 图里有 dsh-ding、bundle 服务得出来
 node tests/host_probe.mjs http://127.0.0.1:PORT <secretBase64Url>
 
-# 5. a real page: materialised bundle, settings row, persisted toggle, clean ring path
+# ⑤ 真页面：bundle 已 materialize、设置行画出来了、开关能改并持久化
 node tests/browser_probe.mjs http://127.0.0.1:PORT <secretBase64Url>
 
-# 6. end to end: send a message, let the turn finish, watch the ring
+# ⑥ 端到端：真发一句话，等这一轮跑完
 node tests/live_turn_probe.mjs http://127.0.0.1:PORT <secretBase64Url>
 
-# 7. three turns in a row — it must ring every time
+# ⑦ 连发三轮，验证每次都响
 node tests/multi_turn_probe.mjs http://127.0.0.1:PORT <secretBase64Url> 3
 
-# 8. a turn that finishes while you look elsewhere must still ring
+# ⑧ 后台会话结束也要响（发问后立刻切走）
 node tests/background_turn_probe.mjs http://127.0.0.1:PORT <secretBase64Url>
 ```
 
-`<secretBase64Url>` is the `secret` of `client-connection/browser-session` in
-`~/.dsh/.credentials.yaml`. The browser probes drive a local Chromium-based browser over CDP;
-the executable is resolved from `CHROME_PATH` or an argument, never hard-coded.
+`<secretBase64Url>` 是 `~/.dsh/.credentials.yaml` 里 `client-connection/browser-session`
+的 `secret`。浏览器探针用 CDP 驱动本机 Chromium 内核浏览器，路径走 `CHROME_PATH`
+或参数，不写死。
 
-Layer 2 output:
+② 的输出：
 
 ```
 ok    suspended + hanging resume still produced audio (fallback plays: 1, webaudio notes: 0)
@@ -230,7 +223,7 @@ ok    rejected playback is recorded: resume did not take: timed out after 120ms 
 OK  audio stall handling: hanging resume never silences the ring
 ```
 
-Layer 7 output:
+⑦ 的输出：
 
 ```
 round 1: rings 0 → 1 (delta 1)  audio {"unlocked":true,"state":"running","hasFallback":true}
@@ -240,20 +233,18 @@ round 3: rings 2 → 3 (delta 1)  audio {"unlocked":true,"state":"running","hasF
 3/3 rounds rang
 ```
 
-## Compatibility
+## 兼容性
 
-Built against DSH `0.2.2-rc.1` on Windows. It depends only on four host surfaces:
-`ctx.slots.inject` / `ctx.slots.register`, `ctx.uiSession.current`,
-`ctx.uiSession.sessionStatus` and `ctx.sessions.binding` / `ctx.sessions.list`. Each of them is
-guarded: if one changes shape, that part degrades and the rest keeps working, and the reason is
-recorded in `__DSH_DING__.problems`.
+对着 DSH `0.2.2-rc.1`、Windows 开发。只依赖四个宿主面：
+`ctx.slots.inject` / `ctx.slots.register`、`ctx.uiSession.current`、
+`ctx.uiSession.sessionStatus`、`ctx.sessions.binding` / `ctx.sessions.list`。
+每一处都有形状校验：哪一块变了就只降级那一块，原因写进 `__DSH_DING__.problems`。
 
-## Scope
+## 边界
 
-- Rings for the current and background sessions; never for subagents.
-- Reads no conversation content, opens no network connection, writes no Host settings, and
-  contributes nothing the model can see.
+- 当前会话与后台会话都响；子代理不响。
+- 不读会话内容、不联网、不写 Host 设置、不产生模型可见内容。
 
-## License
+## 许可
 
-MIT — see [LICENSE](LICENSE).
+MIT —— 见 [LICENSE](LICENSE)。
