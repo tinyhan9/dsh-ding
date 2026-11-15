@@ -34,15 +34,11 @@ Chrome 在设备切换、长时间闲置、系统休眠恢复之后会把 `Audio
 
 ### 安装
 
-```
-link:<本目录绝对路径>
-```
+    link:<本目录绝对路径>
 
 或在 DSH 的 profile 目录下：
 
-```
-dsh plugin --profile desktop install link:<本目录绝对路径>
-```
+    dsh plugin --profile desktop install link:<本目录绝对路径>
 
 桌面端重启一次，然后打开 **设置 → 通用设置** 选音色。
 
@@ -62,15 +58,12 @@ __DSH_DING__.trace        // 最近 40 条「判定 → 出声」流水
 
 解包即可自己跑离线测试：
 
-`ash
-tar -xzf dsh-ding-0.6.0.tgz
-cd package
-node tests/manifest_selftest.mjs
-node tests/client_selftest.mjs
-node tests/audio_stall_selftest.mjs
-node tests/sound_spectrum_selftest.mjs .
-`
-
+    tar -xzf dsh-ding-0.6.0.tgz
+    cd package
+    node tests/manifest_selftest.mjs
+    node tests/client_selftest.mjs
+    node tests/audio_stall_selftest.mjs
+    node tests/sound_spectrum_selftest.mjs .
 
 ### 兼容性
 
@@ -109,15 +102,11 @@ A rejected playback is recorded in `__DSH_DING__.problems` rather than swallowed
 
 ### Install
 
-```
-link:<absolute path to this checkout>
-```
+    link:<absolute path to this checkout>
 
 or, from the DSH profile directory:
 
-```
-dsh plugin --profile desktop install link:<absolute path to this checkout>
-```
+    dsh plugin --profile desktop install link:<absolute path to this checkout>
 
 Restart the desktop app once, then open **Settings → General** to pick a sound.
 
@@ -137,15 +126,12 @@ __DSH_DING__.trace        // last 40 detection → playback steps
 
 Unpack and run the offline suites straight from it:
 
-`ash
-tar -xzf dsh-ding-0.6.0.tgz
-cd package
-node tests/manifest_selftest.mjs
-node tests/client_selftest.mjs
-node tests/audio_stall_selftest.mjs
-node tests/sound_spectrum_selftest.mjs .
-`
-
+    tar -xzf dsh-ding-0.6.0.tgz
+    cd package
+    node tests/manifest_selftest.mjs
+    node tests/client_selftest.mjs
+    node tests/audio_stall_selftest.mjs
+    node tests/sound_spectrum_selftest.mjs .
 
 ### Compatibility
 
