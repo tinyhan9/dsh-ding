@@ -53,8 +53,18 @@ __DSH_DING__.trace        // last 40 detection → playback steps
 
 ### Assets
 
-- `dsh-ding-0.6.0.tgz` — npm-style tarball of the installable package
-  SHA-256 `83f5feaa299756d5c42c8e24b0dc3e622505a627393d9612512467cfd9110911` (152125 bytes)
+- `dsh-ding-0.6.0.tgz` — npm-style tarball of the installable package, tests included
+  SHA-256 `2bbb5191071fafa8aaa429806db3d491dcbc8720785437bda30591c1fe01e76e` (175070 bytes, 27 files)
+
+Unpack and run the offline suites straight from it:
+
+```bash
+tar -xzf dsh-ding-0.6.0.tgz
+cd package
+node tests/client_selftest.mjs
+node tests/audio_stall_selftest.mjs
+node tests/sound_spectrum_selftest.mjs .
+```
 
 ### Compatibility
 
