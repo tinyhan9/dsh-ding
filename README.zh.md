@@ -157,9 +157,12 @@ Chrome 在设备切换、长时间闲置、系统休眠恢复之后会把 `Audio
 
 ## 自测
 
-八层，从便宜到贵，全部在仓库内可跑：
+九层，从便宜到贵，全部在仓库内可跑：
 
 ```bash
+# ⓿ 包结构：清单字段、exports、bundle 包装格式、版本号、patch —— 不需要浏览器
+node tests/manifest_selftest.mjs
+
 # ① bundle 本身：加载器包装、槽位注册、轮次判定、兜底路径、解锁路径、卸载 —— 纯 Node
 node tests/client_selftest.mjs
 

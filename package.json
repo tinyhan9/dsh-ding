@@ -21,10 +21,11 @@
     "README.zh.md",
     "LICENSE",
     "docs/*.wav",
-    "docs/*.md"
+    "docs/hot-reload.md"
   ],
   "scripts": {
-    "test": "node tests/client_selftest.mjs && node tests/audio_stall_selftest.mjs && node tests/sound_spectrum_selftest.mjs",
+    "test": "node tests/manifest_selftest.mjs && node tests/client_selftest.mjs && node tests/audio_stall_selftest.mjs && node tests/sound_spectrum_selftest.mjs",
+    "test:manifest": "node tests/manifest_selftest.mjs",
     "test:sound": "node tests/sound_spectrum_selftest.mjs",
     "test:audio": "node tests/audio_stall_selftest.mjs",
     "test:host": "node tests/host_probe.mjs",
@@ -33,7 +34,8 @@
     "test:multi": "node tests/multi_turn_probe.mjs",
     "test:background": "node tests/background_turn_probe.mjs",
     "test:autoplay": "node tests/autoplay_probe.mjs",
-    "test:hmr": "node tests/hmr_probe.mjs"
+    "test:hmr": "node tests/hmr_probe.mjs",
+    "release": "node scripts/publish-release.mjs"
   },
   "keywords": [
     "dsh",

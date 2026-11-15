@@ -1,0 +1,90 @@
+name: test
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  offline:
+    name: offline suites (node ${{ matrix.node }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [20, 22, 24]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+
+      - name: manifest / package shape
+        run: node tests/manifest_selftest.mjs
+
+      - name: client bundle and turn-end detection
+        run: node tests/client_selftest.mjs
+
+      - name: a hanging resume() must not silence the ring
+        run: node tests/audio_stall_selftest.mjs
+
+      - name: preset acoustics
+        run: node tests/sound_spectrum_selftest.mjs "$RUNNER_TEMP/presets"
+
+      - name: the rendered presets are non-empty
+        run: |
+          set -euo pipefail
+          count=$(ls -1 "$RUNNER_TEMP/presets"/*.wav | wc -l)
+          test "$count" -ge 7
+          for file in "$RUNNER_TEMP/presets"/*.wav; do
+            test -s "$file"
+          done
+          echo "rendered $count presets"
+
+  package:
+    name: package integrity
+    runs-on: ubuntu-latest
+    needs: offline
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: pack
+        run: npm pack --pack-destination "$RUNNER_TEMP"
+
+      - name: inspect the tarball
+        run: |
+          set -euo pipefail
+          tgz=$(ls -1 "$RUNNER_TEMP"/*.tgz | head -n 1)
+          echo "tarball: $tgz ($(stat -c%s "$tgz") bytes)"
+          tar -tzf "$tgz" > "$RUNNER_TEMP/contents.txt"
+          cat "$RUNNER_TEMP/contents.txt"
+          for needed in package/lib/client.js package/lib/index.js package/cordis.patch.yml \
+                        package/package.json package/README.md package/README.zh.md package/LICENSE; do
+            grep -qx "$needed" "$RUNNER_TEMP/contents.txt" || { echo "missing $needed"; exit 1; }
+          done
+          test "$(grep -c '^package/tests/' "$RUNNER_TEMP/contents.txt")" -ge 5
+          test "$(grep -c '^package/docs/.*\.wav$' "$RUNNER_TEMP/contents.txt")" -ge 7
+          echo "tarball contents look right"
+
+      - name: run the offline suites from the unpacked tarball
+        run: |
+          set -euo pipefail
+          tgz=$(ls -1 "$RUNNER_TEMP"/*.tgz | head -n 1)
+          mkdir -p "$RUNNER_TEMP/unpacked"
+          tar -xzf "$tgz" -C "$RUNNER_TEMP/unpacked"
+          cd "$RUNNER_TEMP/unpacked/package"
+          node tests/manifest_selftest.mjs
+          node tests/client_selftest.mjs
+          node tests/audio_stall_selftest.mjs
+          node tests/sound_spectrum_selftest.mjs "$RUNNER_TEMP/unpacked-sounds"

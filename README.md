@@ -152,6 +152,28 @@ the development branch), but Chromium's keyboard reload still works: `F5`, `Ctrl
 `Ctrl+F5` reload; `Ctrl+Shift+R` is blocked. Reloading only reloads the page document — the
 Host process keeps running, so sessions and in-flight tasks survive.
 
+## Releasing
+
+Tag-driven, verified before it publishes (`.github/workflows/release.yml`):
+
+1. Bump `version` in `package.json` and the `version` string on the diagnostics face in
+   `lib/client.js` — `tests/manifest_selftest.mjs` fails if the two disagree.
+2. Write the release body to `docs/release-notes.md`. Use `<!--ASSETS-->` where the asset list
+   goes; the script substitutes the real filename, byte size and SHA-256 into both language
+   sections, so no digest is ever hand-copied.
+3. `git tag -a v<version> -m "..."` and push the tag.
+4. CI runs `manifest`, `client`, `audio_stall` and `sound_spectrum`, packs the tarball, then
+   publishes. The release is created as a **draft** and only flipped to public after the asset
+   upload succeeds, so a failed run never leaves a half-published version.
+
+To publish by hand:
+
+```bash
+npm pack --pack-destination .
+GITHUB_TOKEN=... node scripts/publish-release.mjs \
+  --tag v0.6.0 --notes docs/release-notes.md --assets dsh-ding-0.6.0.tgz
+```
+
 ## Layout
 
 | file | role |
@@ -163,9 +185,12 @@ Host process keeps running, so sessions and in-flight tasks survive.
 
 ## Tests
 
-Eight layers, cheapest first, all runnable from this repository:
+Nine layers, cheapest first, all runnable from this repository:
 
 ```bash
+# 0. package shape: manifest fields, exports, bundle wrapper, version, patch — no browser
+node tests/manifest_selftest.mjs
+
 # 1. the bundle itself: loader wrapper, slot registration, turn-end detection,
 #    fallback path, unlock path, disposal — pure Node, no browser
 node tests/client_selftest.mjs
