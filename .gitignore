@@ -1,4 +1,4 @@
-# OS cruft
+﻿# OS cruft
 .DS_Store
 Thumbs.db
 desktop.ini
@@ -15,7 +15,7 @@ yarn-error.log*
 *.swp
 *.swo
 
-# Scratch output
+# Build artifacts
+*.tgz
 tmp/
-*.local.md
 tests/output/
