@@ -26,7 +26,7 @@ link:<本目录绝对路径>
 装完重启一次桌面端，然后发一句话试试。要确认装上了，控制台敲：
 
 ```js
-__DSH_DING__.version    // "0.6.0"
+__DSH_DING__.version    // "0.6.1"
 __DSH_DING__.ring()     // 立刻响一声，验证音频链路
 ```
 
@@ -105,7 +105,7 @@ dsh plugin --profile desktop install link:<本目录绝对路径>
 页面控制台里有一个只读把手：
 
 ```js
-__DSH_DING__.version      // "0.6.0"
+__DSH_DING__.version      // "0.6.1"
 __DSH_DING__.watching     // 轮次监听是否装上
 __DSH_DING__.watched      // 当前盯了几个会话
 __DSH_DING__.rings        // 累计响过多少次

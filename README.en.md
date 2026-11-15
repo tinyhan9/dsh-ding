@@ -24,7 +24,7 @@ link:<absolute path to this checkout>
 Restart the desktop app once, then send a message. To confirm it is live:
 
 ```js
-__DSH_DING__.version    // "0.6.0"
+__DSH_DING__.version    // "0.6.1"
 __DSH_DING__.ring()     // ring once to verify the audio path
 ```
 
@@ -107,7 +107,7 @@ that preferences are per browser rather than per profile — acceptable for a so
 The page exposes a read-only handle:
 
 ```js
-__DSH_DING__.version      // "0.6.0"
+__DSH_DING__.version      // "0.6.1"
 __DSH_DING__.watching     // true when the turn-end watcher is installed
 __DSH_DING__.watched      // how many sessions are currently watched
 __DSH_DING__.rings        // how many times it has rung
@@ -194,7 +194,7 @@ To publish by hand:
 ```bash
 npm pack --pack-destination .
 GITHUB_TOKEN=... node scripts/publish-release.mjs \
-  --tag v0.6.0 --notes docs/release-notes.md --assets dsh-ding-0.6.0.tgz
+  --tag v0.6.1 --notes docs/release-notes.md --assets dsh-ding-0.6.1.tgz
 ```
 
 ## Layout

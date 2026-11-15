@@ -1,144 +1,82 @@
-# dsh-ding 0.6.0
+# dsh-ding 0.6.1
 
-DeepSeek Harness 的轮次结束提示音：一轮对话跑完时播一声。
-
-Turn-end chime for DeepSeek Harness — plays a short synthesised sound when a conversation turn finishes.
+> 文档与发布说明的语言改成以中文为主。这个版本**没有任何行为变化**：插件逻辑、音色配方、
+> 音频路径与 0.6.0 完全一致，只改了文档组织和仓库展示。
+>
+> Documentation-only release. **No behaviour change** — the plugin logic, sound recipes and
+> audio paths are identical to 0.6.0. Only the docs layout and the repository presentation differ.
 
 ---
 
 ## 中文说明
 
-### 这个版本带来什么
+### 这次改了什么
 
-- **七种音色**，默认 `droplet`（水滴落水 · 叮咚）。`plop` 是石头落水的低频「咕咚」，音高**下行**。
-- **音量 0–100%、总开关、即时试听** —— 设置项在 设置 → 通用设置。
-- **不带音频文件**。每个声音都是「音符 + 带通噪声段」的配方，播放时现场合成。
-- **零运行期依赖**。没有构建步骤、没有打包器、不联网。
+- **README 主语言改成中文**：`README.md` 现在是中文版，原来的英文版移到 `README.en.md`，
+  两份互相链接。
+- **加了「快速开始」**：三条命令 + 两句控制台自检，不用先读完整篇。
+- **仓库 About 用中文写**：一句话说清这是什么、有什么。
+- **打好的包里不再带发布说明**：`files` 字段收紧，tarball 只含可安装内容 + 测试。
 
-### 本版修掉的两个「不响」
+功能本身一个字没动：七种音色、默认 `droplet`、音量、总开关、试听，位置还是在
+**设置 → 通用设置 → 对话结束提示音**。
 
-两轮真实故障塑造了现在的判定逻辑，都被测试固定住了：
-
-| 现象 | 原因 | 修法 |
-|---|---|---|
-| 偶尔不响 | 聚合的 `sessionStatus` 表在某些时序下会整段跳过一次 `true → false` | 增加第二条独立路径，直接订阅每个会话的 `SessionBinding.session` |
-| 切到别的会话后不响 | 早期只盯「当前会话」，你在别处看内容时那一轮就没人看着 | 改为盯 `ctx.sessions.list` 里的**每一个**会话，只排除子代理 |
-
-另外修掉：两条路径各自保存上一拍 `running`（共用一份时，binding 的初始快照会擦掉聚合表已经看到的 `true`），以及 `sessionStatus` 形状变化时只降级到 binding 单路，而不是把整块监听停掉。
-
-### 音频可靠性
-
-Chrome 在设备切换、长时间闲置、系统休眠恢复之后会把 `AudioContext` 挂起，此时 `resume()`
-返回的 promise **可能永远不 resolve**。`ring()` 不等它：最多给 120ms，超时立刻回落到
-`<audio>` 元素。被拒的播放会写进 `__DSH_DING__.problems`，不再静默吞掉。
-
-### 安装
-
-    link:<本目录绝对路径>
-
-或在 DSH 的 profile 目录下：
+### 装法（和之前一样）
 
     dsh plugin --profile desktop install link:<本目录绝对路径>
 
-桌面端重启一次，然后打开 **设置 → 通用设置** 选音色。
+或用插件管理界面，安装 spec 填 `link:<本目录绝对路径>`。
 
-### 验证是否生效
+### 升级后要做什么
 
-```js
-__DSH_DING__.version      // "0.6.0"
-__DSH_DING__.watching     // 轮次监听是否装上
-__DSH_DING__.watched      // 正在盯几个会话（有会话时应 > 0）
-__DSH_DING__.ring()       // 手动响一次，验证音频链路
-__DSH_DING__.trace        // 最近 40 条「判定 → 出声」流水
-```
+- 只换了文档，**不需要刷新也不需要重启**。
+- 如果只是想确认版本：控制台 `__DSH_DING__.version` 应显示 `"0.6.1"`。
 
 ### 资产
 
 <!--ASSETS-->
 
-解包即可自己跑离线测试：
-
-    tar -xzf dsh-ding-0.6.0.tgz
-    cd package
-    node tests/manifest_selftest.mjs
-    node tests/client_selftest.mjs
-    node tests/audio_stall_selftest.mjs
-    node tests/sound_spectrum_selftest.mjs .
-
 ### 兼容性
 
-对着 DSH `0.2.2-rc.1`、Windows 开发。只依赖四个宿主面：`ctx.slots.inject` / `ctx.slots.register`、
+对着 DSH `0.2.2-rc.1`、Windows 开发。只依赖 `ctx.slots.inject` / `ctx.slots.register`、
 `ctx.uiSession.current`、`ctx.uiSession.sessionStatus`、`ctx.sessions.binding` / `ctx.sessions.list`。
-每一处都做了形状校验，哪块变了就只降级那一块，原因写进 `problems`。
 
 ---
 
 ## English
 
-### What's in this release
+### What changed
 
-- **Seven presets**, default `droplet` (water drop landing). `plop` is a low, downward-gliding stone dropping into water.
-- **Volume 0–100%, a global switch, live preview** — the settings row lives in *Settings → General*.
-- **No audio files.** Every sound is a recipe of tones and band-passed noise bursts, synthesised at play time.
-- **Zero runtime dependencies.** No build step, no bundler, no network.
+- **Chinese is now the primary README**: `README.md` is Chinese, the English one moved to
+  `README.en.md`, and the two link to each other.
+- **Added a Quick start**: three commands plus two console checks, before the long read.
+- **The repo About is written in Chinese** now: one sentence covering what it is and what it has.
+- **The packed tarball no longer carries release notes**: the `files` list was tightened, so the
+  tarball holds only installable content plus tests.
 
-### Two detection bugs fixed
+Nothing functional changed: seven presets, default `droplet`, volume, global switch, preview —
+still under **Settings → General → turn-end chime**.
 
-| symptom | cause | fix |
-|---|---|---|
-| occasionally silent | the aggregate `sessionStatus` map can skip a `true → false` transition under some orderings | a second, independent path subscribes to each session's `SessionBinding.session` |
-| silent after switching sessions | watching only the *current* session drops a turn that finishes while you look elsewhere | every session in `ctx.sessions.list` is watched; subagents are excluded |
-
-Also fixed: each path keeps **its own** previous `running` value (sharing one map let the
-binding baseline erase a `true` the aggregate map had already seen), and a reshaped
-`sessionStatus` now degrades to the binding path only instead of disabling the watcher.
-
-### Audio robustness
-
-Chrome can leave an `AudioContext` suspended after device switches, long idle periods or sleep
-resume, and `resume()` may then return a promise that **never settles**. `ring()` never waits on
-it: `resume()` gets at most 120 ms, after which playback falls back to an `<audio>` element.
-A rejected playback is recorded in `__DSH_DING__.problems` rather than swallowed.
-
-### Install
-
-    link:<absolute path to this checkout>
-
-or, from the DSH profile directory:
+### Install (unchanged)
 
     dsh plugin --profile desktop install link:<absolute path to this checkout>
 
-Restart the desktop app once, then open **Settings → General** to pick a sound.
+or use the plugin manager UI with the spec `link:<absolute path to this checkout>`.
 
-### Verifying it works
+### After upgrading
 
-```js
-__DSH_DING__.version      // "0.6.0"
-__DSH_DING__.watching     // true when the watcher is installed
-__DSH_DING__.watched      // how many sessions are watched (> 0 once a session exists)
-__DSH_DING__.ring()       // ring once to check the audio path
-__DSH_DING__.trace        // last 40 detection → playback steps
-```
+- Docs only — **no reload and no restart needed**.
+- To confirm the version: `__DSH_DING__.version` should read `"0.6.1"`.
 
 ### Assets
 
 <!--ASSETS-->
 
-Unpack and run the offline suites straight from it:
-
-    tar -xzf dsh-ding-0.6.0.tgz
-    cd package
-    node tests/manifest_selftest.mjs
-    node tests/client_selftest.mjs
-    node tests/audio_stall_selftest.mjs
-    node tests/sound_spectrum_selftest.mjs .
-
 ### Compatibility
 
 Built against DSH `0.2.2-rc.1` on Windows. Depends only on `ctx.slots.inject` / `ctx.slots.register`,
-`ctx.uiSession.current`, `ctx.uiSession.sessionStatus` and `ctx.sessions.binding` / `ctx.sessions.list`;
-each is shape-checked so a change degrades that part alone.
+`ctx.uiSession.current`, `ctx.uiSession.sessionStatus` and `ctx.sessions.binding` / `ctx.sessions.list`.
 
 ---
 
-**Full Changelog**: https://github.com/tinyhan9/dsh-ding/commits/v0.6.0
+**Full Changelog**: https://github.com/tinyhan9/dsh-ding/compare/v0.6.0...v0.6.1

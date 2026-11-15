@@ -1,6 +1,6 @@
 {
   "name": "dsh-ding",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "description": "DSH 插件：一轮对话结束时播放水滴落水提示音（七种音色，含石头落水的咕咚声；可开关 / 音色 / 音量，设置项位于「通用设置」页）",
   "type": "module",
   "main": "lib/index.js",
