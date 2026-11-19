@@ -70,7 +70,8 @@ jobs:
           tar -tzf "$tgz" > "$RUNNER_TEMP/contents.txt"
           cat "$RUNNER_TEMP/contents.txt"
           for needed in package/lib/client.js package/lib/index.js package/cordis.patch.yml \
-                        package/package.json package/README.md package/README.en.md package/LICENSE; do
+                        package/package.json package/README.md package/README.en.md package/LICENSE \
+                        package/scripts/publish-release.mjs package/scripts/whale-usage-settings.mjs; do
             grep -qx "$needed" "$RUNNER_TEMP/contents.txt" || { echo "missing $needed"; exit 1; }
           done
           test "$(grep -c '^package/tests/' "$RUNNER_TEMP/contents.txt")" -ge 5

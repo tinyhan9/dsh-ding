@@ -89,7 +89,7 @@ ok("main and exports['.'] point at the same file");
 /* ---------- files 清单真的覆盖了入口 ---------- */
 const patterns = manifest.files;
 if (!Array.isArray(patterns) || patterns.length === 0) fail("files must be a non-empty array");
-for (const needed of ["lib", "cordis.patch.yml", "README.md"]) {
+for (const needed of ["lib", "cordis.patch.yml", "README.md", "scripts"]) {
   if (!patterns.includes(needed)) fail(`files does not include "${needed}"`);
 }
 ok(`files covers the entries: ${patterns.join(", ")}`);
