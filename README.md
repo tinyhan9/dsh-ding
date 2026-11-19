@@ -130,6 +130,46 @@ __DSH_DING__.sounds()     // 音色 id 列表
 | `rings` 不涨 | 没观测到 `running → idle`，看 `trace` 里有没有 `turn-end` |
 | `rings` 涨了但没声音 | 音频被拦，看 `trace` 里的 `skip` 和 `problems` |
 
+## 听到两声？
+
+先分清是同一声响了两次，还是**两个插件各响一次**。
+
+`rings` 只涨 1，但你听到两声 —— 那就是别的插件也在放音。
+用这个探针把一轮里**所有**音频起播点连调用栈抓出来：
+
+```bash
+node tests/audio_sources_probe.mjs http://127.0.0.1:PORT <secretBase64Url>
+```
+
+输出会直接标出调用栈里的文件：
+
+```
++ 4300ms  oscillator   at scheduleScore (...plugins/.../client.js)     ← dsh-ding
++ 4301ms  buffer       at scheduleScore (...)                          ← dsh-ding
++ 4353ms  buffer       at beginWithBuffer (/dsh-whale/widget.js:268)   ← 另一个插件
+```
+
+已知的冲突源是 **`dsh-whale-widget`（小鲸鱼记账）**的「每轮消耗提示」：
+它轮询 `/dsh-whale/last-turn.json`，发现新轮次就播 `taskEnd` 音，出厂默认是**开**。
+
+```bash
+# 看它现在的设置
+node scripts/whale-usage-settings.mjs http://127.0.0.1:PORT <secretBase64Url>
+
+# 关掉它那一声（走上游自己的接口，不手改 JSON）
+node scripts/whale-usage-settings.mjs http://127.0.0.1:PORT <secretBase64Url> --set-task-end off
+```
+
+⚠️ **改完必须刷新页面（`F5`）。** whale 的设置只在页面加载时读一次
+（`loadUsageSettings()` 只挂在启动链上），服务端改了而页面不刷新，它会继续按旧值响。
+实测三段验证（`tests/whale_reload_probe.mjs`）：
+
+```
+① 页面加载时=on  → 跑一轮：whale 播放 1 次
+② 关掉并刷新     → 跑一轮：whale 播放 0 次
+③ 改回 on 不刷新 → 跑一轮：whale 播放 0 次   ← 证明它不重读
+```
+
 ## 轮次判定怎么做的
 
 | 项 | 行为 |

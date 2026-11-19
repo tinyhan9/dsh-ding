@@ -132,6 +132,46 @@ If it stays silent:
 | `rings` does not grow | no `running → idle` transition was observed; check `trace` for `turn-end` |
 | `rings` grows but no sound | audio blocked; check `trace` for `skip` / timings, and `problems` |
 
+## Hearing two sounds?
+
+First decide whether one ring fired twice, or **two plugins each rang**. If `rings` only
+incremented once but you heard two sounds, another plugin is playing too. This probe records
+every audio start in a turn together with its call stack:
+
+```bash
+node tests/audio_sources_probe.mjs http://127.0.0.1:PORT <secretBase64Url>
+```
+
+The output names the file on the stack:
+
+```
++ 4300ms  oscillator   at scheduleScore (...plugins/.../client.js)     ← dsh-ding
++ 4301ms  buffer       at scheduleScore (...)                          ← dsh-ding
++ 4353ms  buffer       at beginWithBuffer (/dsh-whale/widget.js:268)   ← another plugin
+```
+
+The known conflict is **`dsh-whale-widget`**, whose "per-turn cost notice" polls
+`/dsh-whale/last-turn.json` and plays a `taskEnd` sound on every new turn — on by default.
+
+```bash
+# read its current settings
+node scripts/whale-usage-settings.mjs http://127.0.0.1:PORT <secretBase64Url>
+
+# turn that sound off (through its own endpoint, not by editing JSON)
+node scripts/whale-usage-settings.mjs http://127.0.0.1:PORT <secretBase64Url> --set-task-end off
+```
+
+⚠️ **Reload the page (`F5`) afterwards.** whale reads its settings once, at load time
+(`loadUsageSettings()` is wired into the startup chain only). Changing the server value without
+reloading leaves it ringing with the old value. Verified in three stages
+(`tests/whale_reload_probe.mjs`):
+
+```
+① loaded with on  → one turn: whale played 1
+② turned off + reload → one turn: whale played 0
+③ turned back on, no reload → one turn: whale played 0   ← it does not re-read
+```
+
 ## How the turn-end detection works
 
 | item | behaviour |
