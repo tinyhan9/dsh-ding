@@ -150,16 +150,21 @@ The output names the file on the stack:
 + 4353ms  buffer       at beginWithBuffer (/dsh-whale/widget.js:268)   ← another plugin
 ```
 
-The known conflict is **`dsh-whale-widget`**, whose "per-turn cost notice" polls
-`/dsh-whale/last-turn.json` and plays a `taskEnd` sound on every new turn — on by default.
+The known conflict is **`dsh-whale-widget`**. Its main job is checking the official balance;
+the per-turn cost notice is a side feature that polls `/dsh-whale/last-turn.json` and plays a
+`taskEnd` sound on every new turn — on by default.
+
+The two sounds are **independent, not a bug**. Keep whichever you want:
 
 ```bash
-# read its current settings
-node scripts/whale-usage-settings.mjs http://127.0.0.1:PORT <secretBase64Url>
-
-# turn that sound off (through its own endpoint, not by editing JSON)
+# silence whale, keep dsh-ding's water drop
 node scripts/whale-usage-settings.mjs http://127.0.0.1:PORT <secretBase64Url> --set-task-end off
+
+# restore whale's sound
+node scripts/whale-usage-settings.mjs http://127.0.0.1:PORT <secretBase64Url> --set-task-end on
 ```
+
+Or change it in its own panel: **whale → global sound settings → per-turn cost notice**.
 
 ⚠️ **Reload the page (`F5`) afterwards.** whale reads its settings once, at load time
 (`loadUsageSettings()` is wired into the startup chain only). Changing the server value without

@@ -144,21 +144,26 @@ node tests/audio_sources_probe.mjs http://127.0.0.1:PORT <secretBase64Url>
 输出会直接标出调用栈里的文件：
 
 ```
-+ 4300ms  oscillator   at scheduleScore (...plugins/.../client.js)     ← dsh-ding
-+ 4301ms  buffer       at scheduleScore (...)                          ← dsh-ding
-+ 4353ms  buffer       at beginWithBuffer (/dsh-whale/widget.js:268)   ← 另一个插件
++ 4578ms  oscillator   at scheduleScore (...plugins/.../client.js)     ← dsh-ding
++ 4578ms  buffer       at scheduleScore (...)                          ← dsh-ding
++ 4970ms  buffer       at beginWithBuffer (/dsh-whale/widget.js:268)   ← 另一个插件
 ```
 
-已知的冲突源是 **`dsh-whale-widget`（小鲸鱼记账）**的「每轮消耗提示」：
-它轮询 `/dsh-whale/last-turn.json`，发现新轮次就播 `taskEnd` 音，出厂默认是**开**。
+已知的冲突源是 **`dsh-whale-widget`（小鲸鱼记账）**。它主要用来查官方余额，
+「每轮消耗提示」只是附带功能：轮询 `/dsh-whale/last-turn.json`，发现新轮次就播 `taskEnd` 音，
+出厂默认是**开**。
+
+两者是**独立的两声，不是 bug**。要留哪一个都可以：
 
 ```bash
-# 看它现在的设置
-node scripts/whale-usage-settings.mjs http://127.0.0.1:PORT <secretBase64Url>
-
-# 关掉它那一声（走上游自己的接口，不手改 JSON）
+# 关掉 whale 那一声（留下 dsh-ding 的水滴）
 node scripts/whale-usage-settings.mjs http://127.0.0.1:PORT <secretBase64Url> --set-task-end off
+
+# 恢复 whale 那一声
+node scripts/whale-usage-settings.mjs http://127.0.0.1:PORT <secretBase64Url> --set-task-end on
 ```
+
+也可以在它自己的面板里改：**小鲸鱼 → 全局音效设置 → 每轮消耗提示**。
 
 ⚠️ **改完必须刷新页面（`F5`）。** whale 的设置只在页面加载时读一次
 （`loadUsageSettings()` 只挂在启动链上），服务端改了而页面不刷新，它会继续按旧值响。
